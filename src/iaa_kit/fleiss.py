@@ -1,13 +1,15 @@
 from __future__ import annotations
 from collections import Counter
-from typing import Sequence
+from typing import Any, Sequence
 
-def fleiss_kappa(matrix: Sequence[Sequence[object]]) -> float:
+Label = Any
+
+def fleiss_kappa(matrix: Sequence[Sequence[Label]]) -> float:
     rows = [list(row) for row in matrix if len(row) >= 2]
     if not rows: raise ValueError("at least one row with two raters required")
     n = len(rows[0])
     if any(len(row) != n for row in rows): raise ValueError("all rows must have same number of ratings")
-    labels = sorted({x for row in rows for x in row}); totals = Counter()
+    labels = sorted({x for row in rows for x in row}, key=repr); totals: Counter[Label] = Counter()
     p_i = []
     for row in rows:
         c = Counter(row); totals.update(c); p_i.append((sum(v*v for v in c.values()) - n) / (n * (n - 1)))
