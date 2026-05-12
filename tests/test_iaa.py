@@ -16,12 +16,21 @@ from iaa_kit import (
     report,
     weighted_kappa,
 )
+from iaa_kit.krippendorff import alpha_value
 
 ROOT = Path(__file__).resolve().parents[1]
 
 def test_krippendorff_tuple():
     value, low, high = krippendorff_alpha([[1,1,2],[2,2,2],[1,None,1]], scale="ordinal", n_boot=50)
     assert -1 <= value <= 1 and low <= high
+
+def test_krippendorff_scales_and_invalid_inputs():
+    data = [[1, 1, 2], [2, 2, 2]]
+    assert alpha_value(data, scale="interval") == pytest.approx(0.375)
+    assert alpha_value(data, scale="ratio") == pytest.approx(0.375)
+    assert krippendorff_alpha([[1, 1], [2]], n_boot=50, seed=0) == (1.0, 1.0, 1.0)
+    with pytest.raises(ValueError, match="scale must be"):
+        alpha_value(data, scale="unsupported")
 
 def test_pairwise_metrics():
     assert cohen_kappa([1,1,0,0], [1,0,0,0]) == pytest.approx(0.5)
@@ -40,6 +49,7 @@ def test_prevalence_bias_and_correction():
     b = ["yes", "no", "yes", "no"]
     assert prevalence_index(a, b) == pytest.approx(0.5)
     assert bias_index(a, b) == pytest.approx(0.25)
+    assert bias_index([], []) == 0.0
     assert paradox_corrected(0.5, 0.2) == pytest.approx(0.6)
 
 def test_notebook_tutorials_execute():
