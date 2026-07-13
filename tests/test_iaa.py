@@ -16,6 +16,7 @@ from iaa_kit import (
     report,
     weighted_kappa,
 )
+from iaa_kit.cli import analyze, load_ratings, main as cli_main
 from iaa_kit.krippendorff import alpha_value
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -60,3 +61,64 @@ def test_notebook_tutorials_execute():
         assert code_cells, f"{notebook_path.name} should include executable tutorial code"
         for cell in code_cells:
             exec("".join(cell["source"]), env)
+
+def test_cli_json_contract(tmp_path):
+    output = tmp_path / "agreement.json"
+    assert cli_main([
+        "analyze",
+        "--input",
+        str(ROOT / "examples" / "ratings_matrix.json"),
+        "--bootstrap-samples",
+        "10",
+        "--out",
+        str(output),
+    ]) == 0
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["ok"] is True
+    assert payload["item_count"] == 4
+    assert "krippendorff_alpha" in payload["metrics"]
+
+def test_cli_stdout_and_input_shapes(tmp_path, capsys):
+    ratings = [[1, 1], [2, 2], [1, 2]]
+    list_input = tmp_path / "ratings-list.json"
+    list_input.write_text(json.dumps(ratings), encoding="utf-8")
+    assert load_ratings(list_input) == ratings
+
+    matrix_input = tmp_path / "ratings-matrix.json"
+    matrix_input.write_text(json.dumps({"matrix": ratings}), encoding="utf-8")
+    assert load_ratings(matrix_input) == ratings
+
+    assert cli_main([
+        "analyze",
+        "--input",
+        str(matrix_input),
+        "--bootstrap-samples",
+        "10",
+    ]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["ok"] is True
+    assert payload["rater_count"] == 2
+    assert "cohen_kappa" in payload["metrics"]
+    assert "weighted_kappa_linear" in payload["metrics"]
+    assert "fleiss_kappa" in payload["metrics"]
+
+def test_cli_validation_errors(tmp_path, capsys):
+    invalid_input = tmp_path / "invalid.json"
+    invalid_input.write_text(json.dumps({"ratings": "not-a-matrix"}), encoding="utf-8")
+    assert cli_main(["analyze", "--input", str(invalid_input)]) == 1
+    assert json.loads(capsys.readouterr().out)["ok"] is False
+
+    uneven_input = tmp_path / "uneven.json"
+    uneven_input.write_text(json.dumps([[1, 2], [1]]), encoding="utf-8")
+    error_output = tmp_path / "errors" / "result.json"
+    assert cli_main([
+        "analyze",
+        "--input",
+        str(uneven_input),
+        "--out",
+        str(error_output),
+    ]) == 1
+    assert "same number of raters" in json.loads(error_output.read_text(encoding="utf-8"))["error"]
+
+    with pytest.raises(ValueError, match="at least one rating row"):
+        analyze([])
