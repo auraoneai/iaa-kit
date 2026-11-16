@@ -1,6 +1,6 @@
 from __future__ import annotations
 import numpy as np
-from typing import Iterable, Sequence
+from typing import Sequence
 
 def _clean(data):
     return [[x for x in row if x is not None and not (isinstance(x, float) and np.isnan(x))] for row in data]
