@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "iaa-kit"
 version = "0.1.2"
-description = "Inter-annotator agreement metrics and bootstrap confidence intervals for review and labeling workflows."
+description = "Inter-annotator agreement calculator for Python: Krippendorff's alpha, Cohen, Fleiss, and Gwet kappa with bootstrap CIs."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "AuraOne" }]
-keywords = ["inter-annotator-agreement", "krippendorff-alpha", "cohen-kappa", "fleiss-kappa", "gwet", "annotation-quality"]
+keywords = ["inter-annotator-agreement", "krippendorff-alpha", "cohen-kappa", "fleiss-kappa", "gwet", "annotation-quality", "inter-annotator-agreement-calculator"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -26,11 +26,12 @@ classifiers = [
 dependencies = ["numpy>=1.23"]
 
 [project.urls]
-Homepage = "https://github.com/auraoneai/iaa-kit"
+Homepage = "https://auraone.ai/open/iaa-kit"
 Documentation = "https://github.com/auraoneai/iaa-kit#readme"
 Repository = "https://github.com/auraoneai/iaa-kit.git"
 Issues = "https://github.com/auraoneai/iaa-kit/issues"
 Changelog = "https://github.com/auraoneai/iaa-kit/blob/main/CHANGELOG.md"
+Source = "https://github.com/auraoneai/iaa-kit"
 
 [project.scripts]
 iaa-kit = "iaa_kit.cli:main"
